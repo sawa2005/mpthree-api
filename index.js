@@ -12,8 +12,8 @@ const app = express();
 app.use(express.json());
 app.use('/api', routes);
 
-app.listen(3000, () => {
-  console.log("Server started at 3000")
+app.listen(3001, () => {
+  console.log("Server started at 3001")
 })
 
 // Set up the storage engine for multer 
