@@ -17,7 +17,7 @@ router.get('/get-all', async (req, res) => {
 // POST
 router.post('/post', async (req, res) => {
     const data = new Model({
-        data: req.body.data,
+        path: req.body.path,
     
         fileName: req.body.fileName,
     
