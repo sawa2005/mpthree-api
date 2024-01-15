@@ -1,8 +1,20 @@
 const express = require('express');
+const multer = require('multer');
 const router = express.Router();
 const Model = require('../models/model');
 
-module.exports = router;
+// Set up the storage engine for multer 
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+      cb(null, 'uploads/');
+    },
+    filename: function (req, file, cb) {
+        const filename = file.fieldname + '-' + Date.now() + '.mp3';
+        cb(null, filename);
+    }
+})
+  
+const upload = multer({ storage: storage });
 
 // GET
 router.get('/get-all', async (req, res) => {
@@ -15,11 +27,14 @@ router.get('/get-all', async (req, res) => {
 })
 
 // POST
-router.post('/post', async (req, res) => {
+router.post('/post', upload.single('mp3'), async (req, res) => {
+    const time = Date.now();
+    const date = new Date(time);
+
     const data = new Model({
-        path: req.body.path,
+        path: req.file.path,
     
-        fileName: req.body.fileName,
+        fileName: req.file.filename,
     
         songName: req.body.songName,
     
@@ -27,7 +42,7 @@ router.post('/post', async (req, res) => {
     
         duration: req.body.duration,
     
-        uploadDate: req.body.uploadDate
+        uploadDate: date
     })
 
     try {
@@ -77,3 +92,5 @@ router.delete('/delete/:id', async (req, res) => {
         res.status(400).json({ message: error.message })
     }
 })
+
+module.exports = router;
