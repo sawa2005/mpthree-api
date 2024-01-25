@@ -2,6 +2,7 @@ const express = require('express');
 const multer = require('multer');
 const router = express.Router();
 const Model = require('../models/model');
+const fs = require("fs");
 
 // Set up the storage engine for multer 
 const storage = multer.diskStorage({
@@ -47,7 +48,8 @@ router.post('/post', upload.single('mp3'), async (req, res) => {
 
     try {
         const dataToSave = await data.save();
-        res.status(200).json(dataToSave);
+        // res.status(200).json(dataToSave);
+        res.redirect('/');
     } catch(error) {
         res.status(400).json({message: error.message})
     }
@@ -85,11 +87,22 @@ router.patch('/update/:id', async (req, res) => {
 router.delete('/delete/:id', async (req, res) => {
     try {
         const id = req.params.id;
-        const data = await Model.findByIdAndDelete(id)
-        res.send(`Document with the file name ${data.fileName} has been deleted..`)
+        const data = await Model.findByIdAndDelete(id);
+        const filePath = data.path;
+
+        fs.unlink(filePath, (err) => {
+            if (err) {
+                console.error(err);
+                res.status(500).json({ message: 'Failed to delete file' });
+            }
+
+            else {
+                res.status(200);
+            }
+        });
     }
     catch (error) {
-        res.status(400).json({ message: error.message })
+        res.status(400).json({ message: error.message });
     }
 })
 
