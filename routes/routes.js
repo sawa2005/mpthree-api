@@ -41,8 +41,6 @@ router.post('/post', upload.single('mp3'), async (req, res) => {
     
         artistName: req.body.artistName,
     
-        duration: req.body.duration,
-    
         uploadDate: date
     })
 
