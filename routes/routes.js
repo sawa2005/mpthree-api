@@ -3,6 +3,7 @@ const multer = require('multer');
 const router = express.Router();
 const Model = require('../models/model');
 const fs = require("fs");
+const path = require('path');
 
 // Set up the storage engine for multer 
 const storage = multer.diskStorage({
@@ -14,8 +15,18 @@ const storage = multer.diskStorage({
         cb(null, filename);
     }
 })
-  
-const upload = multer({ storage: storage });
+
+// Set up file upload for multer
+const upload = multer({ 
+    storage: storage,
+    fileFilter: function (req, file, cb) {
+        const ext = path.extname(file.originalname);
+        if (ext !== '.mp3') {
+            return cb('Only .mp3 files are allowed');
+        }
+        cb(null, true);
+    }
+});
 
 // GET
 router.get('/get-all', async (req, res) => {
@@ -46,10 +57,9 @@ router.post('/post', upload.single('mp3'), async (req, res) => {
 
     try {
         const dataToSave = await data.save();
-        // res.status(200).json(dataToSave);
-        res.redirect('/');
+        res.status(200).redirect('/');
     } catch(error) {
-        res.status(400).json({message: error.message})
+        res.status(400).send(error.message);
     }
 })
 
@@ -75,8 +85,7 @@ router.patch('/update/:id', async (req, res) => {
         )
 
         res.send(result);
-    }
-    catch (error) {
+    } catch (error) {
         res.status(400).json({ message: error.message });
     }
 })
@@ -92,14 +101,11 @@ router.delete('/delete/:id', async (req, res) => {
             if (err) {
                 console.error(err);
                 res.status(500).json({ message: 'Failed to delete file' });
-            }
-
-            else {
+            } else {
                 res.status(200);
             }
         });
-    }
-    catch (error) {
+    } catch (error) {
         res.status(400).json({ message: error.message });
     }
 })
