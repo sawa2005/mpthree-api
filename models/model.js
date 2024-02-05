@@ -24,6 +24,11 @@ const dataSchema = new mongoose.Schema({
     uploadDate: {
         required: true,
         type: Date
+    },
+
+    uploaderId: {
+        required: true,
+        type: String
     }
 })
 
