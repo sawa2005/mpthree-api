@@ -29,6 +29,16 @@ const dataSchema = new mongoose.Schema({
     uploaderId: {
         required: true,
         type: String
+    },
+
+    imagePath: {
+        required: false,
+        type: String
+    },
+
+    imageName: {
+        required: false,
+        type: String
     }
 })
 

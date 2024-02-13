@@ -11,7 +11,8 @@ const storage = multer.diskStorage({
       cb(null, 'uploads/');
     },
     filename: function (req, file, cb) {
-        const filename = file.fieldname + '-' + Date.now() + '.mp3';
+        const ext = path.extname(file.originalname);
+        const filename = file.fieldname + '-' + Date.now() + ext;
         cb(null, filename);
     }
 })
@@ -19,13 +20,14 @@ const storage = multer.diskStorage({
 // Set up file upload for multer
 const upload = multer({ 
     storage: storage,
-    fileFilter: function (req, file, cb) {
+    /* fileFilter: function (req, file, cb) {
         const ext = path.extname(file.originalname);
-        if (ext !== '.mp3') {
-            return cb('Only .mp3 files are allowed');
+        if (ext !== '.mp3' || ext !== '.jpg' || ext !== '.png') {
+            console.log(file);
+            return cb('File format not allowed');
         }
-        cb(null, true);
-    }
+        cb(null, true)
+    } */
 });
 
 // GET
@@ -38,15 +40,29 @@ router.get('/get-all', async (req, res) => {
     }
 })
 
+const fields = [ 
+    { name: 'mp3', maxCount: 1 },
+    { name: 'image', maxCount: 1 }
+]
+
 // POST
-router.post('/post', upload.single('mp3'), async (req, res) => {
+router.post('/post', upload.fields(fields), async (req, res) => {
     const time = Date.now();
     const date = new Date(time);
 
+    const mp3 = req.files.mp3[0];
+    var image = {};
+
+    if (req.files.image === undefined) {
+        image = {path: 'uploads/default.png', filename: 'default.png'}
+    } else {
+        image = req.files.image[0]
+    }
+
     const data = new Model({
-        path: req.file.path,
+        path: mp3.path,
     
-        fileName: req.file.filename,
+        fileName: mp3.filename,
     
         songName: req.body.songName,
     
@@ -54,7 +70,11 @@ router.post('/post', upload.single('mp3'), async (req, res) => {
     
         uploadDate: date,
 
-        uploaderId: req.body.uploaderId
+        uploaderId: req.body.uploaderId,
+
+        imagePath: image.path,
+
+        imageName: image.filename
     })
 
     try {
@@ -98,6 +118,7 @@ router.delete('/delete/:id', async (req, res) => {
         const id = req.params.id;
         const data = await Model.findByIdAndDelete(id);
         const filePath = data.path;
+        const imagePath = data.imagePath
 
         fs.unlink(filePath, (err) => {
             if (err) {
@@ -107,6 +128,17 @@ router.delete('/delete/:id', async (req, res) => {
                 res.status(200);
             }
         });
+
+        if (imagePath !== 'uploads/default.png') {
+            fs.unlink(imagePath, (err) => {
+                if (err) {
+                    console.error(err);
+                    res.status(500).json({ message: 'Failed to delete image' });
+                } else {
+                    res.status(200);
+                }
+            });
+        }
     } catch (error) {
         res.status(400).json({ message: error.message });
     }
