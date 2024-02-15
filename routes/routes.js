@@ -20,14 +20,40 @@ const storage = multer.diskStorage({
 // Set up file upload for multer
 const upload = multer({ 
     storage: storage,
-    /* fileFilter: function (req, file, cb) {
+    fileFilter: function (req, file, cb) {
         const ext = path.extname(file.originalname);
-        if (ext !== '.mp3' || ext !== '.jpg' || ext !== '.png') {
-            console.log(file);
-            return cb('File format not allowed');
+        const name = file.fieldname;
+        var mp3Accepted = true;
+        var imgAccepted = true;
+
+        if (name === 'mp3') {
+            if (ext === '.mp3') {
+                mp3Accepted = true;
+            } else {
+                mp3Accepted = false;
+            }
         }
-        cb(null, true)
-    } */
+
+        if (name === 'image') {
+            if (ext === '.jpg') {
+                imgAccepted = true;
+            } else {
+                imgAccepted = false;
+            }
+        }
+
+        if (mp3Accepted && imgAccepted) {
+            mp3Accepted = false;
+            imgAccepted = false;
+
+            cb(null, true)
+        } else if (mp3Accepted === false || imgAccepted === false) {
+            mp3Accepted = false;
+            imgAccepted = false;
+
+            cb(new Error('Invalid file format (only mp3 for audio and jpg for images are allowed)'));
+        }
+    }
 });
 
 // GET
