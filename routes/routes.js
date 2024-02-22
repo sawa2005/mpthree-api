@@ -23,8 +23,8 @@ const upload = multer({
     fileFilter: function (req, file, cb) {
         const ext = path.extname(file.originalname);
         const name = file.fieldname;
-        var mp3Accepted = true;
-        var imgAccepted = true;
+        let mp3Accepted = true;
+        let imgAccepted = true;
 
         if (name === 'mp3') {
             if (ext === '.mp3') {
@@ -77,7 +77,7 @@ router.post('/post', upload.fields(fields), async (req, res) => {
     const date = new Date(time);
 
     const mp3 = req.files.mp3[0];
-    var image = {};
+    let image = {};
 
     if (req.files.image === undefined) {
         image = {path: 'uploads/default.png', filename: 'default.png'}
