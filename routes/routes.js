@@ -105,7 +105,7 @@ router.post('/post', upload.fields(fields), async (req, res) => {
 
     try {
         const dataToSave = await data.save();
-        res.status(200).redirect('/');
+        res.status(200).redirect('https://slw-mpthree.netlify.app/');
     } catch(error) {
         res.status(400).send(error.message);
     }
