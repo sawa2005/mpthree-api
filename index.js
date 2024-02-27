@@ -13,9 +13,9 @@ app.use('/api', routes);
 app.use(express.static('uploads'));
 app.use(cors());
 
-app.listen(3001, () => {
-  console.log("Server started at 3001")
-})
+const PORT = process.env.PORT || 80;
+
+app.listen(PORT, () => console.log(`Server started at ${PORT}`));
  
 // Set up MongoDB connection 
 const url = process.env.MONGODB_URI;
