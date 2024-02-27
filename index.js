@@ -6,12 +6,13 @@ const cors = require('cors');
 
 dotenv.config();
  
-const app = express(); 
+const app = express();
+
+app.use(cors());
  
 app.use(express.json());
 app.use('/api', routes);
 app.use(express.static('uploads'));
-app.use(cors());
 
 const PORT = process.env.PORT || 5000;
 
