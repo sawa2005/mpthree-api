@@ -13,7 +13,7 @@ app.use('/api', routes);
 app.use(express.static('uploads'));
 app.use(cors());
 
-const PORT = process.env.PORT || 80;
+const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => console.log(`Server started at ${PORT}`));
  
