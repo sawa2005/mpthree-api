@@ -5,16 +5,17 @@ const Model = require('../models/model');
 const fs = require("fs");
 const path = require('path');
 
-const { S3Client } = require('@aws-sdk/client-s3');
+const AWS = require('aws-sdk')
 const multerS3 = require('multer-s3');
 
-const s3 = new S3Client();
+AWS.config.update({ region: process.env.AWS_S3_BUCKET_REGION })
+const s3 = new AWS.S3({ apiVersion: '2006-03-01' })
 
 // Set up file upload for multer and AWS S3
 const upload = multer({ 
     storage: multerS3({
         s3: s3,
-        bucket: 'mpthree-uploads',
+        bucket: process.env.AWS_S3_BUCKET_NAME,
         metadata: (req, file, cb) => {
             cb(null, {fieldName: file.fieldname});
         },
