@@ -5,21 +5,25 @@ const Model = require('../models/model');
 const fs = require("fs");
 const path = require('path');
 
-// Set up the storage engine for multer 
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-      cb(null, 'uploads/');
-    },
-    filename: function (req, file, cb) {
-        const ext = path.extname(file.originalname);
-        const filename = file.fieldname + '-' + Date.now() + ext;
-        cb(null, filename);
-    }
-})
+const { S3Client } = require('@aws-sdk/client-s3');
+const multerS3 = require('multer-s3');
 
-// Set up file upload for multer
+const s3 = new S3Client();
+
+// Set up file upload for multer and AWS S3
 const upload = multer({ 
-    storage: storage,
+    storage: multerS3({
+        s3: s3,
+        bucket: 'mpthree-uploads',
+        metadata: (req, file, cb) => {
+            cb(null, {fieldName: file.fieldname});
+        },
+        key: (req, file, cb) => {
+            const ext = path.extname(file.originalname);
+            cb(null, file.fieldname + '-' + Date.now() + ext);
+        }
+    }),
+
     fileFilter: function (req, file, cb) {
         const ext = path.extname(file.originalname);
         const name = file.fieldname;
@@ -171,3 +175,54 @@ router.delete('/delete/:id', async (req, res) => {
 })
 
 module.exports = router;
+
+/* Set up the storage engine for multer 
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+      cb(null, 'uploads/');
+    },
+    filename: function (req, file, cb) {
+        const ext = path.extname(file.originalname);
+        const filename = file.fieldname + '-' + Date.now() + ext;
+        cb(null, filename);
+    }
+})
+
+// Set up file upload for multer
+const upload = multer({ 
+    storage: storage,
+    fileFilter: function (req, file, cb) {
+        const ext = path.extname(file.originalname);
+        const name = file.fieldname;
+        let mp3Accepted = true;
+        let imgAccepted = true;
+
+        if (name === 'mp3') {
+            if (ext === '.mp3') {
+                mp3Accepted = true;
+            } else {
+                mp3Accepted = false;
+            }
+        }
+
+        if (name === 'image') {
+            if (ext === '.jpg') {
+                imgAccepted = true;
+            } else {
+                imgAccepted = false;
+            }
+        }
+
+        if (mp3Accepted && imgAccepted) {
+            mp3Accepted = false;
+            imgAccepted = false;
+
+            cb(null, true)
+        } else if (mp3Accepted === false || imgAccepted === false) {
+            mp3Accepted = false;
+            imgAccepted = false;
+
+            cb(new Error('Invalid file format (only mp3 for audio and jpg for images are allowed)'));
+        }
+    }
+}); */
