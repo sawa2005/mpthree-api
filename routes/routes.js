@@ -1,28 +1,39 @@
 const express = require('express');
 const multer = require('multer');
+const dotenv = require('dotenv');
 const router = express.Router();
 const Model = require('../models/model');
 const fs = require("fs");
 const path = require('path');
 
+dotenv.config();
+
 const AWS = require('aws-sdk')
 const multerS3 = require('multer-s3');
 
-AWS.config.update({ region: process.env.AWS_S3_BUCKET_REGION })
-const s3 = new AWS.S3({ apiVersion: '2006-03-01' })
+AWS.config.update({ 
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+})
+
+const s3 = new AWS.S3()
+const bucketName = process.env.AWS_S3_BUCKET_NAME
 
 // Set up file upload for multer and AWS S3
 const upload = multer({ 
     storage: multerS3({
         s3: s3,
-        bucket: process.env.AWS_S3_BUCKET_NAME,
-        metadata: (req, file, cb) => {
-            cb(null, {fieldName: file.fieldname});
-        },
+        bucket: bucketName,
+        acl: "public-read",
+        contentType: multerS3.AUTO_CONTENT_TYPE,
         key: (req, file, cb) => {
             const ext = path.extname(file.originalname);
             cb(null, file.fieldname + '-' + Date.now() + ext);
         }
+
+        /* metadata: (req, file, cb) => {
+            cb(null, {fieldName: file.fieldname});
+        }, */
     }),
 
     fileFilter: function (req, file, cb) {
@@ -85,15 +96,15 @@ router.post('/post', upload.fields(fields), async (req, res) => {
     let image = {};
 
     if (req.files.image === undefined) {
-        image = {path: 'uploads/default.png', filename: 'default.png'}
+        image = {location: `${process.env.AWS_URL}/default.png`, key: 'default.png'}
     } else {
         image = req.files.image[0]
     }
 
     const data = new Model({
-        path: mp3.path,
+        path: mp3.location,
     
-        fileName: mp3.filename,
+        fileName: mp3.key,
     
         songName: req.body.songName,
     
@@ -103,14 +114,14 @@ router.post('/post', upload.fields(fields), async (req, res) => {
 
         uploaderId: req.body.uploaderId,
 
-        imagePath: image.path,
+        imagePath: image.location,
 
-        imageName: image.filename
+        imageName: image.key
     })
 
     try {
         const dataToSave = await data.save();
-        res.status(200).redirect('https://slw-mpthree.netlify.app/');
+        res.status(200).redirect(process.env.CLIENT_URL);
     } catch(error) {
         res.status(400).send(error.message);
     }
@@ -148,27 +159,27 @@ router.delete('/delete/:id', async (req, res) => {
     try {
         const id = req.params.id;
         const data = await Model.findByIdAndDelete(id);
-        const filePath = data.path;
-        const imagePath = data.imagePath
+        const fileKey = data.fileName;
+        const imageKey = data.imageName;
 
-        fs.unlink(filePath, (err) => {
-            if (err) {
-                console.error(err);
+        s3.deleteObject({ Bucket: bucketName, Key: fileKey }, (error, data) => {
+            if (error) {
+                console.error(error);
                 res.status(500).json({ message: 'Failed to delete file' });
-            } else {
-                res.status(200);
             }
-        });
 
-        if (imagePath !== 'uploads/default.png') {
-            fs.unlink(imagePath, (err) => {
-                if (err) {
-                    console.error(err);
+            res.status(200);
+        })
+
+        if (imageKey !== 'default.png') {
+            s3.deleteObject({ Bucket: bucketName, Key: imageKey }, (error, data) => {
+                if (error) {
+                    console.error(error);
                     res.status(500).json({ message: 'Failed to delete image' });
-                } else {
-                    res.status(200);
                 }
-            });
+    
+                res.status(200);
+            })
         }
     } catch (error) {
         res.status(400).json({ message: error.message });

@@ -12,17 +12,14 @@ app.use(cors());
  
 app.use(express.json());
 app.use('/api', routes);
-app.use(express.static('uploads'));
+// app.use(express.static('uploads'));
 
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => console.log(`Server started at ${PORT}`));
  
 // Set up MongoDB connection 
-const url = process.env.MONGODB_URI;
-
-/* Alt. Local connection
-const url = process.env.LOCAL_URI; */
+const url = process.env.URI;
 
 // Connect to database with Mongoose
 mongoose.connect(url);
