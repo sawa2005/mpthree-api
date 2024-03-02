@@ -148,7 +148,7 @@ router.patch('/update/:id', async (req, res) => {
             id, updatedData, options
         )
 
-        res.status(200).redirect(`${process.env.CLIENT_URL}/manage`);
+        res.status(302).redirect(`${process.env.CLIENT_URL}/manage`);
     } catch (error) {
         res.status(400).json({ message: error.message });
     }
