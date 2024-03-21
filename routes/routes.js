@@ -39,35 +39,13 @@ const upload = multer({
     fileFilter: function (req, file, cb) {
         const ext = path.extname(file.originalname);
         const name = file.fieldname;
-        let mp3Accepted = true;
-        let imgAccepted = true;
-
-        if (name === 'mp3') {
-            if (ext === '.mp3') {
-                mp3Accepted = true;
-            } else {
-                mp3Accepted = false;
-            }
-        }
-
-        if (name === 'image') {
-            if (ext === '.jpg') {
-                imgAccepted = true;
-            } else {
-                imgAccepted = false;
-            }
-        }
-
-        if (mp3Accepted && imgAccepted) {
-            mp3Accepted = false;
-            imgAccepted = false;
-
+        
+        if (name === 'mp3' && ext === '.mp3') {
             cb(null, true)
-        } else if (mp3Accepted === false || imgAccepted === false) {
-            mp3Accepted = false;
-            imgAccepted = false;
-
-            cb(new Error('Invalid file format (only mp3 for audio and jpg for images are allowed)'));
+        } else if (name === 'image' && ext === '.jpg') {
+            cb(null, true)
+        } else {
+            cb('Invalid file format (only mp3 for audio and jpg for images are allowed)', false)
         }
     }
 });
